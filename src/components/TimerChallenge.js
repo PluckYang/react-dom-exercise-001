@@ -2,25 +2,29 @@ import { useState, useRef } from "react";
 import ResultModal from "./ResultModal.js";
 
 export default function TimerChallenge({ title, targetTime }) {
-  const [timerStarted, setTimerStarted] = useState(false);
-  const [timerExpired, setTimerExpired] = useState(false);
-
   const dialog = useRef();
   const timer = useRef();
 
+  const [timeRemaining, setTimeRemaining] = useState(targetTime * 1000);
+
+  const timerIsActive = timeRemaining > 0 && timeRemaining < targetTime * 1000;
+
+  if (timeRemaining <= 0) {
+    clearInterval(timer.current);
+    setTimeRemaining(targetTime * 1000);
+    dialog.current.open();
+  }
+
   function handleStart() {
-    setTimerStarted(true);
-
-    timer.current = setTimeout(() => {
-      //setTimeout为JS函数，在倒计时（毫秒）后执行函数
-      setTimerExpired(true);
-
-      dialog.current.showModal();
-    }, targetTime * 1000);
+    timer.current = setInterval(() => {
+      //setInterval 执行目标函数每N毫秒，N最小可为1
+      setTimeRemaining((prevTimeRemaining) => prevTimeRemaining - 10);
+    }, 10);
   }
 
   function handleStop() {
-    clearTimeout(timer.current); //JS函数，打断setTimeout的计时，为了确认执行目标，先setTimeout传递给变数
+    dialog.current.open();
+    clearInterval(timer.current); //JS函数，打断setInterval的计时
   }
 
   return (
@@ -32,12 +36,12 @@ export default function TimerChallenge({ title, targetTime }) {
           {targetTime} second{targetTime > 1 ? "s" : ""}
         </p>
         <p>
-          <button onClick={timerStarted ? handleStop : handleStart}>
-            {timerStarted ? "Stop" : "Start"} Challenge
+          <button onClick={timerIsActive ? handleStop : handleStart}>
+            {timerIsActive ? "Stop" : "Start"} Challenge
           </button>
         </p>
-        <p className={timerStarted ? "active" : undefined}>
-          {timerStarted ? "Time is Running..." : "Timer Inactive"}
+        <p className={timerIsActive ? "active" : undefined}>
+          {timerIsActive ? "Time is Running..." : "Timer Inactive"}
         </p>
       </section>
     </>
